@@ -78,6 +78,21 @@
       min-height: 18px;
     }
 
+    .metric-delta {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 750;
+    }
+
+    .metric-delta.up {
+      color: #0f766e;
+    }
+
+    .metric-delta.down {
+      color: #b91c1c;
+    }
+
     .chart-panel {
       padding: 14px;
     }
@@ -276,9 +291,9 @@
           </div>
           <div class="col-12 col-sm-6 col-xl-3">
             <div class="metric-card">
-              <div class="metric-label">음료 / 와인 매출 비중</div>
-              <div class="metric-value" id="kpiMix">-</div>
-              <div class="metric-foot">Bev 매출액 내 구성</div>
+              <div class="metric-label">전년대비 Bev 매출</div>
+              <div class="metric-value" id="kpiYoY">-</div>
+              <div class="metric-foot" id="kpiYoYFoot">동월 기준</div>
             </div>
           </div>
         </section>
@@ -337,6 +352,7 @@
                   <th class="text-end">와인 재료비</th>
                   <th class="text-end">와인 코스트율</th>
                   <th class="text-end">Bev 매출</th>
+                  <th class="text-end">전년대비</th>
                   <th class="text-end">Bev 재료비</th>
                   <th class="text-end">Bev 코스트율</th>
                 </tr>
@@ -421,6 +437,60 @@
         };
       }
 
+      function compareYearOverYear(records, metricKey = "bevRevenue", baselineRecords = records) {
+        const years = Array.from(new Set(records.map((row) => row.year))).sort((a, b) => a - b);
+        const currentYear = years[years.length - 1];
+        const previousYear = currentYear - 1;
+        if (!currentYear) {
+          return {
+            currentYear,
+            previousYear,
+            currentValue: 0,
+            previousValue: 0,
+            delta: 0,
+            deltaRate: null,
+            comparableMonths: [],
+          };
+        }
+
+        const currentRows = records.filter((row) => row.year === currentYear);
+        const previousByMonth = new Map(
+          baselineRecords
+            .filter((row) => row.year === previousYear)
+            .map((row) => [row.month, row])
+        );
+        const comparableRows = currentRows.filter((row) => previousByMonth.has(row.month));
+        const comparableMonths = comparableRows.map((row) => row.month);
+        const currentValue = sum(comparableRows, metricKey);
+        const previousValue = comparableRows.reduce((total, row) => {
+          const previous = previousByMonth.get(row.month);
+          return total + (Number(previous?.[metricKey]) || 0);
+        }, 0);
+        const delta = currentValue - previousValue;
+        return {
+          currentYear,
+          previousYear,
+          currentValue,
+          previousValue,
+          delta,
+          deltaRate: previousValue ? delta / previousValue : null,
+          comparableMonths,
+        };
+      }
+
+      function yoyForRecord(row, records, metricKey = "bevRevenue") {
+        const previous = records.find((item) => item.year === row.year - 1 && item.month === row.month);
+        if (!previous || !previous[metricKey]) return null;
+        const currentValue = Number(row[metricKey]) || 0;
+        const previousValue = Number(previous[metricKey]) || 0;
+        const delta = currentValue - previousValue;
+        return {
+          previousValue,
+          delta,
+          deltaRate: previousValue ? delta / previousValue : null,
+        };
+      }
+
       function groupByQuarter(records) {
         const groups = new Map();
         for (const row of records) {
@@ -440,6 +510,12 @@
 
       function formatRate(value) {
         return `${((Number(value) || 0) * 100).toFixed(1)}%`;
+      }
+
+      function formatSignedRate(value) {
+        if (value === null || value === undefined) return "-";
+        const sign = value > 0 ? "+" : "";
+        return `${sign}${formatRate(value)}`;
       }
 
       function formatMetric(value, key) {
@@ -498,6 +574,17 @@
 
       function renderTrend(chart, records, metricKey) {
         const meta = metricMeta[metricKey];
+        const sourceRecords = window.DashboardSourceRecords || records;
+        const previousByMonth = new Map(
+          sourceRecords
+            .filter((row) => row.year === Math.max(...records.map((item) => item.year)) - 1)
+            .map((row) => [row.month, row])
+        );
+        const latestYear = records.length ? Math.max(...records.map((row) => row.year)) : null;
+        const previousSeries = records.map((row) => {
+          if (row.year !== latestYear) return null;
+          return previousByMonth.get(row.month)?.[metricKey] ?? null;
+        });
         chart.setOption({
           ...buildBaseChart(true),
           tooltip: {
@@ -509,15 +596,27 @@
             ...buildBaseChart().yAxis,
             axisLabel: { formatter: (value) => formatMetric(value, metricKey), color: "#64748b" },
           },
-          series: [{
-            name: meta.label,
-            type: metricKey.includes("Rate") ? "line" : "bar",
-            smooth: true,
-            data: records.map((row) => row[metricKey]),
-            itemStyle: { color: meta.color },
-            lineStyle: { width: 3 },
-            areaStyle: metricKey.includes("Rate") ? { opacity: 0.08 } : undefined,
-          }],
+          series: [
+            {
+              name: meta.label,
+              type: metricKey.includes("Rate") ? "line" : "bar",
+              smooth: true,
+              data: records.map((row) => row[metricKey]),
+              itemStyle: { color: meta.color },
+              lineStyle: { width: 3 },
+              areaStyle: metricKey.includes("Rate") ? { opacity: 0.08 } : undefined,
+            },
+            {
+              name: "전년 동월",
+              type: "line",
+              smooth: true,
+              data: previousSeries,
+              connectNulls: false,
+              symbol: "circle",
+              itemStyle: { color: "#94a3b8" },
+              lineStyle: { width: 2, type: "dashed" },
+            },
+          ],
         }, true);
       }
 
@@ -570,36 +669,47 @@
         }, true);
       }
 
-      function renderTable(records) {
+      function renderTable(records, allRecords) {
         const body = document.getElementById("detailRows");
         if (!body) return;
         if (records.length === 0) {
-          body.innerHTML = '<tr><td colspan="11"><div class="empty-state">선택한 조건에 데이터가 없습니다.</div></td></tr>';
+          body.innerHTML = '<tr><td colspan="12"><div class="empty-state">선택한 조건에 데이터가 없습니다.</div></td></tr>';
           return;
         }
-        body.innerHTML = records.map((row) => `
-          <tr>
-            <td><span class="badge bg-secondary-lt">${row.ym}</span></td>
-            <td class="text-end">${formatMoney(row.fnbRevenue)}</td>
-            <td class="text-end">${formatMoney(row.drinkRevenue)}</td>
-            <td class="text-end">${formatMoney(row.drinkCost)}</td>
-            <td class="text-end">${formatRate(row.drinkCostRate)}</td>
-            <td class="text-end">${formatMoney(row.wineRevenue)}</td>
-            <td class="text-end">${formatMoney(row.wineCost)}</td>
-            <td class="text-end">${formatRate(row.wineCostRate)}</td>
-            <td class="text-end fw-bold">${formatMoney(row.bevRevenue)}</td>
-            <td class="text-end">${formatMoney(row.bevCost)}</td>
-            <td class="text-end fw-bold">${formatRate(row.bevCostRate)}</td>
-          </tr>
-        `).join("");
+        body.innerHTML = records.map((row) => {
+          const yoy = yoyForRecord(row, allRecords, "bevRevenue");
+          const yoyClass = yoy && yoy.delta >= 0 ? "up" : "down";
+          const yoyText = yoy ? `${formatSignedRate(yoy.deltaRate)} (${formatMoney(yoy.delta)})` : "-";
+          return `
+            <tr>
+              <td><span class="badge bg-secondary-lt">${row.ym}</span></td>
+              <td class="text-end">${formatMoney(row.fnbRevenue)}</td>
+              <td class="text-end">${formatMoney(row.drinkRevenue)}</td>
+              <td class="text-end">${formatMoney(row.drinkCost)}</td>
+              <td class="text-end">${formatRate(row.drinkCostRate)}</td>
+              <td class="text-end">${formatMoney(row.wineRevenue)}</td>
+              <td class="text-end">${formatMoney(row.wineCost)}</td>
+              <td class="text-end">${formatRate(row.wineCostRate)}</td>
+              <td class="text-end fw-bold">${formatMoney(row.bevRevenue)}</td>
+              <td class="text-end"><span class="metric-delta ${yoy ? yoyClass : ""}">${yoyText}</span></td>
+              <td class="text-end">${formatMoney(row.bevCost)}</td>
+              <td class="text-end fw-bold">${formatRate(row.bevCostRate)}</td>
+            </tr>
+          `;
+        }).join("");
       }
 
       function updateSummary(records, filters) {
         const totals = summarize(records);
+        const sourceRecords = window.DashboardSourceRecords || records;
+        const yoy = compareYearOverYear(records, "bevRevenue", sourceRecords);
         setText("kpiBevRevenue", formatMoney(totals.bevRevenue));
         setText("kpiBevCost", formatMoney(totals.bevCost));
         setText("kpiBevRate", formatRate(totals.bevCostRate));
-        setText("kpiMix", `${formatRate(totals.drinkShareOfBev)} / ${formatRate(totals.wineShareOfBev)}`);
+        setText("kpiYoY", yoy.deltaRate === null ? "-" : formatSignedRate(yoy.deltaRate));
+        setText("kpiYoYFoot", yoy.deltaRate === null
+          ? "비교 가능한 전년도 데이터 없음"
+          : `${yoy.previousYear}년 대비 ${formatMoney(yoy.delta)} · ${yoy.comparableMonths.length}개월`);
         setText("kpiBevShare", `식음료 매출 대비 ${formatRate(totals.bevShareOfFnb)}`);
         setText("kpiBevCostFoot", `음료 ${formatMoney(totals.drinkCost)} · 와인 ${formatMoney(totals.wineCost)}`);
         setText("recordCount", `${records.length}개월`);
@@ -632,6 +742,7 @@
         if (!document.getElementById("dashboard-root") || typeof echarts === "undefined") return;
         initMonthSelects();
         const data = getData();
+        window.DashboardSourceRecords = data;
         const charts = {
           trend: echarts.init(document.getElementById("trendChart")),
           mix: echarts.init(document.getElementById("mixChart")),
@@ -656,7 +767,7 @@
           renderMix(charts.mix, totals);
           renderBars(charts.bar, records);
           renderRates(charts.rate, records);
-          renderTable(records);
+          renderTable(records, data);
           groupByQuarter(records);
         }
 
@@ -674,6 +785,7 @@
       window.DashboardCore = {
         filterRecords,
         summarize,
+        compareYearOverYear,
         groupByQuarter,
         formatMoney,
         formatRate,
