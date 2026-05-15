@@ -119,6 +119,39 @@
       height: 318px;
     }
 
+    .yoy-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .yoy-item {
+      border: 1px solid var(--dash-line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #f8fafc;
+    }
+
+    .yoy-item-title {
+      font-size: 13px;
+      color: #475569;
+      font-weight: 750;
+      margin-bottom: 8px;
+    }
+
+    .yoy-item-rate {
+      font-size: 25px;
+      line-height: 1.15;
+      font-weight: 850;
+      margin-bottom: 4px;
+    }
+
+    .yoy-item-detail {
+      font-size: 12px;
+      color: var(--dash-muted);
+      line-height: 1.5;
+    }
+
     .table-panel {
       padding: 0;
       overflow: hidden;
@@ -191,6 +224,10 @@
 
       .metric-value {
         white-space: normal;
+      }
+
+      .yoy-grid {
+        grid-template-columns: 1fr;
       }
     }
   </style>
@@ -294,6 +331,24 @@
               <div class="metric-label">전년대비 Bev 매출</div>
               <div class="metric-value" id="kpiYoY">-</div>
               <div class="metric-foot" id="kpiYoYFoot">동월 기준</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="chart-panel mb-3">
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+            <div>
+              <div class="chart-title">전년대비 매출 상승폭 비교</div>
+              <div class="chart-subtitle" id="yoySubtitle">음료, 와인, Bev 매출의 동월 기준 비교</div>
+            </div>
+            <span class="badge bg-green-lt" id="yoyBasis">전년도 비교</span>
+          </div>
+          <div class="row g-3">
+            <div class="col-12 col-xl-5">
+              <div class="yoy-grid" id="yoyCards"></div>
+            </div>
+            <div class="col-12 col-xl-7">
+              <div class="chart chart-sm" id="yoyChart"></div>
             </div>
           </div>
         </section>
@@ -478,6 +533,19 @@
         };
       }
 
+      function compareRevenueYearOverYear(records, baselineRecords = records) {
+        return [
+          ["drinkRevenue", "음료 매출", "#2563eb"],
+          ["wineRevenue", "와인 매출", "#8b5cf6"],
+          ["bevRevenue", "Bev 매출", "#008878"],
+        ].map(([key, label, color]) => ({
+          key,
+          label,
+          color,
+          ...compareYearOverYear(records, key, baselineRecords),
+        }));
+      }
+
       function yoyForRecord(row, records, metricKey = "bevRevenue") {
         const previous = records.find((item) => item.year === row.year - 1 && item.month === row.month);
         if (!previous || !previous[metricKey]) return null;
@@ -516,6 +584,12 @@
         if (value === null || value === undefined) return "-";
         const sign = value > 0 ? "+" : "";
         return `${sign}${formatRate(value)}`;
+      }
+
+      function formatSignedMoney(value) {
+        const number = Number(value) || 0;
+        const sign = number > 0 ? "+" : "";
+        return `${sign}${formatMoney(number)}`;
       }
 
       function formatMetric(value, key) {
@@ -669,6 +743,73 @@
         }, true);
       }
 
+      function renderYoYComparison(chart, comparisons) {
+        chart.setOption({
+          animationDuration: 350,
+          tooltip: {
+            trigger: "axis",
+            confine: true,
+            formatter: (items) => {
+              const item = comparisons[items[0].dataIndex];
+              return [
+                `<strong>${item.label}</strong>`,
+                `전년: ${formatMoney(item.previousValue)}`,
+                `현재: ${formatMoney(item.currentValue)}`,
+                `증감: ${formatSignedMoney(item.delta)}`,
+                `증감률: ${formatSignedRate(item.deltaRate)}`,
+              ].join("<br>");
+            },
+          },
+          grid: { left: 68, right: 48, top: 18, bottom: 34 },
+          xAxis: {
+            type: "value",
+            axisLabel: { formatter: "{value}%", color: "#64748b" },
+            splitLine: { lineStyle: { color: "#e2e8f0" } },
+          },
+          yAxis: {
+            type: "category",
+            data: comparisons.map((item) => item.label),
+            axisLabel: { color: "#334155", fontWeight: 700 },
+            axisLine: { lineStyle: { color: "#cbd5e1" } },
+          },
+          series: [{
+            name: "전년대비",
+            type: "bar",
+            data: comparisons.map((item) => ({
+              value: item.deltaRate === null ? 0 : Number((item.deltaRate * 100).toFixed(1)),
+              itemStyle: { color: item.delta >= 0 ? item.color : "#b91c1c" },
+            })),
+            label: {
+              show: true,
+              position: "right",
+              formatter: (params) => `${params.value > 0 ? "+" : ""}${params.value}%`,
+              color: "#334155",
+              fontWeight: 750,
+            },
+          }],
+        }, true);
+      }
+
+      function renderYoYCards(comparisons) {
+        const container = document.getElementById("yoyCards");
+        if (!container) return;
+        container.innerHTML = comparisons.map((item) => {
+          const direction = item.delta >= 0 ? "up" : "down";
+          const rateText = item.deltaRate === null ? "-" : formatSignedRate(item.deltaRate);
+          return `
+            <div class="yoy-item">
+              <div class="yoy-item-title">${item.label}</div>
+              <div class="yoy-item-rate metric-delta ${direction}">${rateText}</div>
+              <div class="yoy-item-detail">
+                현재 ${formatMoney(item.currentValue)}<br>
+                전년 ${formatMoney(item.previousValue)}<br>
+                증감 ${formatSignedMoney(item.delta)}
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+
       function renderTable(records, allRecords) {
         const body = document.getElementById("detailRows");
         if (!body) return;
@@ -703,6 +844,7 @@
         const totals = summarize(records);
         const sourceRecords = window.DashboardSourceRecords || records;
         const yoy = compareYearOverYear(records, "bevRevenue", sourceRecords);
+        const revenueYoY = compareRevenueYearOverYear(records, sourceRecords);
         setText("kpiBevRevenue", formatMoney(totals.bevRevenue));
         setText("kpiBevCost", formatMoney(totals.bevCost));
         setText("kpiBevRate", formatRate(totals.bevCostRate));
@@ -717,7 +859,11 @@
         const first = records[0];
         const last = records[records.length - 1];
         setText("activePeriod", records.length ? `${first.ym} - ${last.ym}` : "선택 데이터 없음");
-        return totals;
+        setText("yoyBasis", yoy.deltaRate === null ? "비교 불가" : `${yoy.previousYear}년 대비 ${yoy.currentYear}년`);
+        setText("yoySubtitle", yoy.deltaRate === null
+          ? "전년도 같은 월 데이터가 있어야 비교할 수 있습니다."
+          : `${yoy.comparableMonths.join(", ")}월 동월 기준 · 현재 선택 조건`);
+        return { totals, revenueYoY };
       }
 
       function applyPreset(name) {
@@ -748,6 +894,7 @@
           mix: echarts.init(document.getElementById("mixChart")),
           bar: echarts.init(document.getElementById("barChart")),
           rate: echarts.init(document.getElementById("rateChart")),
+          yoy: echarts.init(document.getElementById("yoyChart")),
         };
 
         function refresh() {
@@ -760,13 +907,15 @@
             document.getElementById("endMonth").value = String(filters.endMonth);
           }
           const records = filterRecords(data, filters);
-          const totals = updateSummary(records, filters);
+          const summary = updateSummary(records, filters);
           const metricKey = document.getElementById("metricSelect").value;
           setText("trendSubtitle", `${metricMeta[metricKey].label} · 선택 조건 기준`);
           renderTrend(charts.trend, records, metricKey);
-          renderMix(charts.mix, totals);
+          renderMix(charts.mix, summary.totals);
           renderBars(charts.bar, records);
           renderRates(charts.rate, records);
+          renderYoYCards(summary.revenueYoY);
+          renderYoYComparison(charts.yoy, summary.revenueYoY);
           renderTable(records, data);
           groupByQuarter(records);
         }
@@ -786,6 +935,7 @@
         filterRecords,
         summarize,
         compareYearOverYear,
+        compareRevenueYearOverYear,
         groupByQuarter,
         formatMoney,
         formatRate,
