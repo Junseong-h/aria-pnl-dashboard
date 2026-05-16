@@ -571,9 +571,7 @@
 
       function formatMoney(value) {
         const number = Number(value) || 0;
-        if (Math.abs(number) >= 100000000) return `${(number / 100000000).toFixed(1)}억`;
-        if (Math.abs(number) >= 10000) return `${Math.round(number / 10000).toLocaleString("ko-KR")}만`;
-        return number.toLocaleString("ko-KR");
+        return `${Math.round(number).toLocaleString("ko-KR")}원`;
       }
 
       function formatRate(value) {
