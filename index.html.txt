@@ -1,0 +1,1378 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>아리아 식음료 P&L 대시보드</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.34.1/dist/tabler-icons.min.css">
+  <style>
+    :root {
+      --dash-ink: #17212f;
+      --dash-muted: #667085;
+      --dash-line: #dbe3ee;
+      --dash-blue: #2563eb;
+      --dash-teal: #008878;
+      --dash-amber: #b7791f;
+      --dash-red: #c2410c;
+      --dash-panel: #ffffff;
+      --dash-bg: #f4f7fb;
+    }
+
+    body {
+      background: var(--dash-bg);
+      color: var(--dash-ink);
+      letter-spacing: 0;
+      overflow-x: hidden;
+    }
+
+    .page-wrapper {
+      min-height: 100vh;
+    }
+
+    .navbar-brand {
+      font-weight: 700;
+      letter-spacing: 0;
+      min-width: 0;
+    }
+
+    .dashboard-shell {
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 18px;
+    }
+
+    .control-band,
+    .metric-card,
+    .chart-panel,
+    .table-panel {
+      background: var(--dash-panel);
+      border: 1px solid var(--dash-line);
+      border-radius: 8px;
+      box-shadow: 0 8px 22px rgba(24, 36, 58, 0.05);
+    }
+
+    .control-band {
+      padding: 16px;
+    }
+
+    .report-header {
+      position: relative;
+      background: #ffffff;
+      color: var(--dash-ink);
+      border-radius: 8px;
+      padding: 22px;
+      border: 1px solid var(--dash-line);
+      box-shadow: 0 8px 22px rgba(24, 36, 58, 0.05);
+      overflow: hidden;
+    }
+
+    .report-header::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 6px;
+      background: var(--dash-blue);
+    }
+
+    .report-header .text-secondary {
+      color: #64748b !important;
+    }
+
+    .report-title {
+      font-size: clamp(23px, 3vw, 36px);
+      line-height: 1.15;
+      font-weight: 850;
+      letter-spacing: 0;
+      margin: 0;
+    }
+
+    .report-subtitle {
+      color: #475569;
+      font-size: 14px;
+      margin-top: 8px;
+      max-width: 780px;
+      overflow-wrap: anywhere;
+    }
+
+    .insight-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .insight-card {
+      border: 1px solid var(--dash-line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 14px;
+      min-height: 96px;
+    }
+
+    .insight-label {
+      color: var(--dash-muted);
+      font-size: 12px;
+      font-weight: 750;
+      margin-bottom: 7px;
+    }
+
+    .insight-value {
+      font-size: 19px;
+      line-height: 1.25;
+      font-weight: 850;
+    }
+
+    .section-kicker {
+      color: #475569;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .metric-card {
+      min-height: 118px;
+      padding: 16px;
+    }
+
+    .metric-label {
+      color: var(--dash-muted);
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .metric-value {
+      font-size: clamp(20px, 2.2vw, 31px);
+      line-height: 1.18;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .metric-foot {
+      color: var(--dash-muted);
+      font-size: 12px;
+      min-height: 18px;
+    }
+
+    .metric-delta {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 750;
+    }
+
+    .metric-delta.up {
+      color: #0f766e;
+    }
+
+    .metric-delta.down {
+      color: #b91c1c;
+    }
+
+    .chart-panel {
+      padding: 14px;
+    }
+
+    .chart-title {
+      font-size: 15px;
+      font-weight: 750;
+      margin-bottom: 4px;
+    }
+
+    .chart-subtitle {
+      min-height: 18px;
+      color: var(--dash-muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    .chart {
+      width: 100%;
+      height: 360px;
+    }
+
+    .chart.chart-sm {
+      height: 318px;
+    }
+
+    .yoy-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .yoy-item {
+      border: 1px solid var(--dash-line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #f8fafc;
+    }
+
+    .yoy-item-title {
+      font-size: 13px;
+      color: #475569;
+      font-weight: 750;
+      margin-bottom: 8px;
+    }
+
+    .yoy-item-rate {
+      font-size: 25px;
+      line-height: 1.15;
+      font-weight: 850;
+      margin-bottom: 4px;
+    }
+
+    .yoy-item-detail {
+      font-size: 12px;
+      color: var(--dash-muted);
+      line-height: 1.5;
+    }
+
+    .table-panel {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .table-scroll {
+      overflow: auto;
+      max-height: 520px;
+    }
+
+    .table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: #eef3f8;
+      color: #334155;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .table td {
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+
+    .btn-check:checked + .btn {
+      background: #eaf2ff;
+      border-color: #9ec5fe;
+      color: #0f3b75;
+      font-weight: 750;
+    }
+
+    .btn-check:checked + .btn:hover {
+      background: #dbeafe;
+      border-color: #93c5fd;
+      color: #0f3b75;
+    }
+
+    .btn-group,
+    .btn-group .btn,
+    .report-header .d-flex > div,
+    .navbar .container-xl {
+      min-width: 0;
+    }
+
+    .btn-group .btn {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .btn-group > .btn-check {
+      display: none;
+    }
+
+    .form-select,
+    .form-control,
+    .btn {
+      border-radius: 6px;
+    }
+
+    .section-title {
+      font-size: 17px;
+      font-weight: 800;
+      margin: 0;
+    }
+
+    .period-pill {
+      border: 1px solid var(--dash-line);
+      border-radius: 999px;
+      padding: 6px 11px;
+      background: #f8fafc;
+      color: #475569;
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .empty-state {
+      min-height: 180px;
+      display: grid;
+      place-items: center;
+      color: var(--dash-muted);
+      text-align: center;
+    }
+
+    @media (max-width: 991px) {
+      .dashboard-shell {
+        padding: 12px;
+      }
+
+      .chart {
+        height: 300px;
+      }
+
+      .metric-value {
+        white-space: normal;
+      }
+
+      .yoy-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .insight-strip {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 575px) {
+      .navbar .container-xl {
+        gap: 8px;
+      }
+
+      .navbar-brand {
+        font-size: 15px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .period-pill {
+        max-width: 42vw;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .report-header {
+        padding: 18px;
+      }
+
+      .btn-group.w-100 {
+        display: flex;
+        flex-wrap: wrap;
+      }
+
+      .btn-group.w-100 .btn {
+        flex: 1 0 50%;
+        max-width: 50%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page" id="dashboard-root">
+    <header class="navbar navbar-expand-md d-print-none bg-white border-bottom">
+      <div class="container-xl">
+        <div class="navbar-brand">
+          <i class="ti ti-chart-histogram me-2 text-blue"></i>
+          아리아 식음료 P&L
+        </div>
+        <div class="navbar-nav flex-row order-md-last">
+          <span class="period-pill" id="activePeriod">기간 선택 중</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="page-wrapper">
+      <main class="dashboard-shell">
+        <section class="report-header mb-3">
+          <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+            <div>
+              <div class="section-kicker text-secondary">Aria Beverage P&L Dashboard</div>
+              <h1 class="report-title">식음료 BEV 성과 요약</h1>
+              <div class="report-subtitle" id="executiveSummary">
+                선택한 기간의 음료, 와인, 프로모션 주류 매출을 보고용으로 요약합니다.
+              </div>
+            </div>
+            <div class="text-end">
+              <div class="text-secondary small">현재 선택 기간</div>
+              <div class="h2 m-0" id="heroPeriod">-</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="control-band mb-3">
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+            <div>
+              <h2 class="section-title">기간 선택</h2>
+              <div class="text-secondary small">연도, 월, 분기를 선택하면 모든 차트와 표가 함께 변경됩니다.</div>
+            </div>
+          </div>
+          <div class="row g-3 align-items-end">
+            <div class="col-12 col-lg-3">
+              <label class="form-label">연도</label>
+              <div class="btn-group w-100" role="group" aria-label="연도 선택">
+                <input type="checkbox" class="btn-check" id="year2025" value="2025" checked>
+                <label class="btn" for="year2025">2025</label>
+                <input type="checkbox" class="btn-check" id="year2026" value="2026" checked>
+                <label class="btn" for="year2026">2026</label>
+              </div>
+            </div>
+            <div class="col-6 col-md-3 col-lg-2">
+              <label class="form-label">시작월</label>
+              <select class="form-select" id="startMonth"></select>
+            </div>
+            <div class="col-6 col-md-3 col-lg-2">
+              <label class="form-label">종료월</label>
+              <select class="form-select" id="endMonth"></select>
+            </div>
+            <div class="col-12 col-md-6 col-lg-3">
+              <label class="form-label">분기</label>
+              <div class="btn-group w-100" role="group" aria-label="분기 선택">
+                <input type="checkbox" class="btn-check quarter-filter" id="q1" value="Q1" checked>
+                <label class="btn" for="q1">Q1</label>
+                <input type="checkbox" class="btn-check quarter-filter" id="q2" value="Q2" checked>
+                <label class="btn" for="q2">Q2</label>
+                <input type="checkbox" class="btn-check quarter-filter" id="q3" value="Q3" checked>
+                <label class="btn" for="q3">Q3</label>
+                <input type="checkbox" class="btn-check quarter-filter" id="q4" value="Q4" checked>
+                <label class="btn" for="q4">Q4</label>
+              </div>
+            </div>
+            <div class="col-12 col-lg-2">
+              <label class="form-label">주요 차트</label>
+              <select class="form-select" id="metricSelect">
+                <option value="bevRevenue">Bev 매출액</option>
+                <option value="bevCost">Bev 재료비</option>
+                <option value="bevCostRate">Bev 코스트율</option>
+                <option value="drinkRevenue">음료 매출액</option>
+                <option value="wineRevenue">와인 매출액</option>
+              </select>
+            </div>
+            <div class="col-12 d-flex flex-wrap gap-2">
+              <button class="btn btn-outline-secondary" type="button" data-preset="all">
+                <i class="ti ti-calendar-stats me-1"></i>전체
+              </button>
+              <button class="btn btn-outline-secondary" type="button" data-preset="h1">상반기</button>
+              <button class="btn btn-outline-secondary" type="button" data-preset="h2">하반기</button>
+              <button class="btn btn-outline-secondary" type="button" data-preset="q1">1분기</button>
+              <button class="btn btn-outline-secondary" type="button" data-preset="q2">2분기</button>
+              <button class="btn btn-outline-secondary" type="button" data-preset="q3">3분기</button>
+              <button class="btn btn-outline-secondary" type="button" data-preset="q4">4분기</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="row g-3 mb-3" aria-label="요약 지표">
+          <div class="col-12 col-sm-6 col-xl-3">
+            <div class="metric-card">
+              <div class="metric-label">Bev 매출액</div>
+              <div class="metric-value text-blue" id="kpiBevRevenue">-</div>
+              <div class="metric-foot" id="kpiBevShare">-</div>
+            </div>
+          </div>
+          <div class="col-12 col-sm-6 col-xl-3">
+            <div class="metric-card">
+              <div class="metric-label">Bev 재료비</div>
+              <div class="metric-value text-teal" id="kpiBevCost">-</div>
+              <div class="metric-foot" id="kpiBevCostFoot">-</div>
+            </div>
+          </div>
+          <div class="col-12 col-sm-6 col-xl-3">
+            <div class="metric-card">
+              <div class="metric-label">Bev 코스트율</div>
+              <div class="metric-value text-orange" id="kpiBevRate">-</div>
+              <div class="metric-foot">가중 평균 기준</div>
+            </div>
+          </div>
+          <div class="col-12 col-sm-6 col-xl-3">
+            <div class="metric-card">
+              <div class="metric-label">전년대비 Bev 매출</div>
+              <div class="metric-value" id="kpiYoY">-</div>
+              <div class="metric-foot" id="kpiYoYFoot">동월 기준</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="insight-strip mb-3" aria-label="핵심 해석">
+          <div class="insight-card">
+            <div class="insight-label">한 줄 결론</div>
+            <div class="insight-value" id="insightPerformance">-</div>
+          </div>
+          <div class="insight-card">
+            <div class="insight-label">매출 구성</div>
+            <div class="insight-value" id="insightMix">-</div>
+          </div>
+          <div class="insight-card">
+            <div class="insight-label">프로모션 주류</div>
+            <div class="insight-value" id="insightPromo">-</div>
+          </div>
+        </section>
+
+        <section class="chart-panel mb-3">
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+            <div>
+              <div class="section-kicker">Executive View</div>
+              <div class="chart-title">전년대비 매출 상승폭 비교</div>
+              <div class="chart-subtitle" id="yoySubtitle">음료, 와인, Bev 매출의 동월 기준 비교</div>
+            </div>
+            <span class="badge bg-green-lt" id="yoyBasis">전년도 비교</span>
+          </div>
+          <div class="row g-3">
+            <div class="col-12 col-xl-5">
+              <div class="yoy-grid" id="yoyCards"></div>
+            </div>
+            <div class="col-12 col-xl-7">
+              <div class="chart chart-sm" id="yoyChart"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="chart-panel mb-3">
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+            <div>
+              <div class="section-kicker">Promotion View</div>
+              <div class="chart-title">프로모션 매출 구성</div>
+              <div class="chart-subtitle">와인, 하이볼, 전통주, 맥주를 월별, 분기별, 반기별, 연간으로 비교</div>
+            </div>
+            <span class="badge bg-purple-lt" id="promoPeriod">16개월</span>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="metric-card">
+                <div class="metric-label">와인 매출</div>
+                <div class="metric-value text-blue" id="promoWineTotal">-</div>
+                <div class="metric-foot">P&L 기준 와인 매출과 대조</div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="metric-card">
+                <div class="metric-label">하이볼 매출</div>
+                <div class="metric-value text-teal" id="highballRevenueTotal">-</div>
+                <div class="metric-foot" id="highballFoot">2025년 9~11월 프로모션 포함</div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="metric-card">
+                <div class="metric-label">전통주 매출</div>
+                <div class="metric-value text-purple" id="klqRevenueTotal">-</div>
+                <div class="metric-foot">합산 없이 독립 집계</div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+              <div class="metric-card">
+                <div class="metric-label">맥주 매출</div>
+                <div class="metric-value text-orange" id="beerRevenueTotal">-</div>
+                <div class="metric-foot" id="topLiquorText">-</div>
+              </div>
+            </div>
+          </div>
+          <div class="row g-3">
+            <div class="col-12">
+              <div class="chart chart-sm" id="promoRevenueChart"></div>
+            </div>
+            <div class="col-12 col-xl-4">
+              <div class="chart chart-sm" id="liquorQuarterChart"></div>
+            </div>
+            <div class="col-12 col-xl-4">
+              <div class="chart chart-sm" id="liquorHalfChart"></div>
+            </div>
+            <div class="col-12 col-xl-4">
+              <div class="chart chart-sm" id="liquorYearChart"></div>
+            </div>
+          </div>
+          <div class="table-scroll mt-3">
+            <table class="table table-vcenter table-hover mb-0">
+              <thead>
+                <tr>
+                  <th>연월</th>
+                  <th class="text-end">와인</th>
+                  <th class="text-end">하이볼</th>
+                  <th class="text-end">전통주</th>
+                  <th class="text-end">맥주</th>
+                  <th class="text-end">합계</th>
+                </tr>
+              </thead>
+              <tbody id="promoRows"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="row g-3 mb-3">
+          <div class="col-12 col-xl-8">
+            <div class="chart-panel">
+              <div class="d-flex align-items-center justify-content-between gap-2">
+                <div>
+                  <div class="section-kicker">Analysis View</div>
+                  <div class="chart-title">월별 추이</div>
+                  <div class="chart-subtitle" id="trendSubtitle">선택 지표 기준</div>
+                </div>
+                <span class="badge bg-blue-lt" id="recordCount">0개월</span>
+              </div>
+              <div class="chart" id="trendChart"></div>
+            </div>
+          </div>
+          <div class="col-12 col-xl-4">
+            <div class="chart-panel">
+              <div class="chart-title">Bev 구성</div>
+              <div class="chart-subtitle">음료와 와인 매출 기여도</div>
+              <div class="chart chart-sm" id="mixChart"></div>
+            </div>
+          </div>
+          <div class="col-12 col-xl-6">
+            <div class="chart-panel">
+              <div class="chart-title">매출액 vs 재료비</div>
+              <div class="chart-subtitle">선택 기간 월별 Bev 금액</div>
+              <div class="chart chart-sm" id="barChart"></div>
+            </div>
+          </div>
+          <div class="col-12 col-xl-6">
+            <div class="chart-panel">
+              <div class="chart-title">코스트율 비교</div>
+              <div class="chart-subtitle">음료, 와인, Bev 가중 코스트율</div>
+              <div class="chart chart-sm" id="rateChart"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="table-panel">
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 p-3 border-bottom">
+            <div>
+              <div class="section-kicker">Detail View</div>
+              <h2 class="section-title">선택 기간 원본 데이터</h2>
+            </div>
+            <div class="text-secondary small" id="tableSummary">-</div>
+          </div>
+          <div class="table-scroll">
+            <table class="table table-vcenter table-hover mb-0">
+              <thead>
+                <tr>
+                  <th>연월</th>
+                  <th class="text-end">식음료 매출</th>
+                  <th class="text-end">음료 매출</th>
+                  <th class="text-end">음료 재료비</th>
+                  <th class="text-end">음료 코스트율</th>
+                  <th class="text-end">와인 매출</th>
+                  <th class="text-end">와인 재료비</th>
+                  <th class="text-end">와인 코스트율</th>
+                  <th class="text-end">Bev 매출</th>
+                  <th class="text-end">전년대비</th>
+                  <th class="text-end">Bev 재료비</th>
+                  <th class="text-end">Bev 코스트율</th>
+                </tr>
+              </thead>
+              <tbody id="detailRows"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script id="pnl-data" type="application/json">[{"year":2025,"month":1,"ym":"2025-01","quarter":"Q1","fnbRevenue":1922850263,"drinkRevenue":9496722,"drinkCost":2326080,"drinkCostRate":0.24493504179652725,"wineRevenue":25790340,"wineCost":8634320,"wineCostRate":0.3347889170906626,"bevRevenue":35287062,"bevCost":10960400,"bevCostRate":0.31060676006407106},{"year":2025,"month":2,"ym":"2025-02","quarter":"Q1","fnbRevenue":1606704162,"drinkRevenue":7849646,"drinkCost":2069510,"drinkCostRate":0.263643736290783,"wineRevenue":19893366,"wineCost":6485335,"wineCostRate":0.32600491038067664,"bevRevenue":27743012,"bevCost":8554845,"bevCostRate":0.3083603539514743},{"year":2025,"month":3,"ym":"2025-03","quarter":"Q1","fnbRevenue":1687119618,"drinkRevenue":7474502,"drinkCost":1925840,"drinkCostRate":0.25765462367927655,"wineRevenue":19202555,"wineCost":6678275,"wineCostRate":0.3477805427454836,"bevRevenue":26677057,"bevCost":8604115,"bevCostRate":0.32252864324576735},{"year":2025,"month":4,"ym":"2025-04","quarter":"Q2","fnbRevenue":1442145948,"drinkRevenue":7796618,"drinkCost":1707900,"drinkCostRate":0.219056519121496,"wineRevenue":18205509,"wineCost":6035600,"wineCostRate":0.3315260232493362,"bevRevenue":26002127,"bevCost":7743500,"bevCostRate":0.29780256053668225},{"year":2025,"month":5,"ym":"2025-05","quarter":"Q2","fnbRevenue":1839287401,"drinkRevenue":12134537,"drinkCost":2321090,"drinkCostRate":0.19127965080167458,"wineRevenue":18904908,"wineCost":7219320,"wineCostRate":0.38187543679133484,"bevRevenue":31039445,"bevCost":9540410,"bevCostRate":0.30736406530464705},{"year":2025,"month":6,"ym":"2025-06","quarter":"Q2","fnbRevenue":1677735489,"drinkRevenue":12350770,"drinkCost":3167720,"drinkCostRate":0.25647955552568785,"wineRevenue":14921749,"wineCost":5679470,"wineCostRate":0.3806169102562977,"bevRevenue":27272519,"bevCost":8847190,"bevCostRate":0.3243994439970873},{"year":2025,"month":7,"ym":"2025-07","quarter":"Q3","fnbRevenue":1577695125,"drinkRevenue":11888183,"drinkCost":3044910,"drinkCostRate":0.2561291326016768,"wineRevenue":11992201,"wineCost":4800990,"wineCostRate":0.40034268938621026,"bevRevenue":23880384,"bevCost":7845900,"bevCostRate":0.328549993165939},{"year":2025,"month":8,"ym":"2025-08","quarter":"Q3","fnbRevenue":1774430090,"drinkRevenue":10926190,"drinkCost":2755805,"drinkCostRate":0.25222012430682605,"wineRevenue":16209634,"wineCost":6906730,"wineCostRate":0.4260879671928435,"bevRevenue":27135824,"bevCost":9662535,"bevCostRate":0.356080397632296},{"year":2025,"month":9,"ym":"2025-09","quarter":"Q3","fnbRevenue":1447540033,"drinkRevenue":10357008,"drinkCost":2327271,"drinkCostRate":0.2247049533996691,"wineRevenue":17368963,"wineCost":7363230,"wineCostRate":0.42393031754400073,"bevRevenue":27725971,"bevCost":9690501,"bevCostRate":0.34950988731828364},{"year":2025,"month":10,"ym":"2025-10","quarter":"Q4","fnbRevenue":1793846957,"drinkRevenue":9749754,"drinkCost":2011625,"drinkCostRate":0.2063257185771046,"wineRevenue":20613527,"wineCost":8747920,"wineCostRate":0.4243776428943965,"bevRevenue":30363281,"bevCost":10759545,"bevCostRate":0.35436041974515203},{"year":2025,"month":11,"ym":"2025-11","quarter":"Q4","fnbRevenue":2020680665,"drinkRevenue":15522036,"drinkCost":2917424,"drinkCostRate":0.18795369370358372,"wineRevenue":31368109,"wineCost":12136190,"wineCostRate":0.38689581192159206,"bevRevenue":46890145,"bevCost":15053614,"bevCostRate":0.3210400394368582},{"year":2025,"month":12,"ym":"2025-12","quarter":"Q4","fnbRevenue":2770306594,"drinkRevenue":18184095,"drinkCost":3349208,"drinkCostRate":0.18418337563678588,"wineRevenue":52503016,"wineCost":17707800,"wineCostRate":0.33727205309500696,"bevRevenue":70687111,"bevCost":21057008,"bevCostRate":0.2978903466573984},{"year":2026,"month":1,"ym":"2026-01","quarter":"Q1","fnbRevenue":1985014210,"drinkRevenue":13201332,"drinkCost":2507509,"drinkCostRate":0.18994363599067124,"wineRevenue":24379201,"wineCost":8187680,"wineCostRate":0.33584693772367685,"bevRevenue":37580533,"bevCost":10695189,"bevCostRate":0.2845938614015932},{"year":2026,"month":2,"ym":"2026-02","quarter":"Q1","fnbRevenue":1734693884,"drinkRevenue":12363946,"drinkCost":2375458,"drinkCostRate":0.19212782068119677,"wineRevenue":21017532,"wineCost":6212250,"wineCostRate":0.29557466595031234,"bevRevenue":33381478,"bevCost":8587708,"bevCostRate":0.25725966956885493},{"year":2026,"month":3,"ym":"2026-03","quarter":"Q1","fnbRevenue":1634435434,"drinkRevenue":12184176,"drinkCost":2386199,"drinkCostRate":0.19584410139840397,"wineRevenue":19099700,"wineCost":6258540,"wineCostRate":0.3276773980743153,"bevRevenue":31283876,"bevCost":8644739,"bevCostRate":0.27633209516621277},{"year":2026,"month":4,"ym":"2026-04","quarter":"Q2","fnbRevenue":1652750230,"drinkRevenue":8689370,"drinkCost":1877655,"drinkCostRate":0.216086436646155,"wineRevenue":23431555,"wineCost":9330660,"wineCostRate":0.3982091670825944,"bevRevenue":32120925,"bevCost":11208315,"bevCostRate":0.3489412275642747}]</script>
+  <script id="promo-liquor-data" type="application/json">{"monthly":[{"year":2025,"month":1,"ym":"2025-01","wineRevenue":25790340,"highballRevenue":0,"beerRevenue":3571047,"klqRevenue":3482446},{"year":2025,"month":2,"ym":"2025-02","wineRevenue":19893366,"highballRevenue":0,"beerRevenue":2460579,"klqRevenue":2793209},{"year":2025,"month":3,"ym":"2025-03","wineRevenue":19202555,"highballRevenue":0,"beerRevenue":2935027,"klqRevenue":2570693},{"year":2025,"month":4,"ym":"2025-04","wineRevenue":18205509,"highballRevenue":0,"beerRevenue":3340046,"klqRevenue":2613079},{"year":2025,"month":5,"ym":"2025-05","wineRevenue":18904908,"highballRevenue":0,"beerRevenue":5424707,"klqRevenue":3992574},{"year":2025,"month":6,"ym":"2025-06","wineRevenue":14921749,"highballRevenue":0,"beerRevenue":6688988,"klqRevenue":3407075},{"year":2025,"month":7,"ym":"2025-07","wineRevenue":11992201,"highballRevenue":0,"beerRevenue":6621662,"klqRevenue":3089218},{"year":2025,"month":8,"ym":"2025-08","wineRevenue":16209634,"highballRevenue":0,"beerRevenue":5559891,"klqRevenue":2499452},{"year":2025,"month":9,"ym":"2025-09","wineRevenue":17368963,"highballRevenue":806617,"beerRevenue":2492228,"klqRevenue":3683426},{"year":2025,"month":10,"ym":"2025-10","wineRevenue":20613527,"highballRevenue":1194068,"beerRevenue":3264259,"klqRevenue":2832594},{"year":2025,"month":11,"ym":"2025-11","wineRevenue":31368109,"highballRevenue":1051658,"beerRevenue":5435429,"klqRevenue":5879100},{"year":2025,"month":12,"ym":"2025-12","wineRevenue":52503016,"highballRevenue":0,"beerRevenue":7360969,"klqRevenue":6147453},{"year":2026,"month":1,"ym":"2026-01","wineRevenue":24379201,"highballRevenue":0,"beerRevenue":5741711,"klqRevenue":4356135},{"year":2026,"month":2,"ym":"2026-02","wineRevenue":21017532,"highballRevenue":0,"beerRevenue":3827639,"klqRevenue":5441599},{"year":2026,"month":3,"ym":"2026-03","wineRevenue":19099700,"highballRevenue":0,"beerRevenue":4461586,"klqRevenue":4983905},{"year":2026,"month":4,"ym":"2026-04","wineRevenue":23431555,"highballRevenue":0,"beerRevenue":3546945,"klqRevenue":2533799}]}</script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
+  <script id="dashboard-core">
+    (() => {
+      const metricMeta = {
+        fnbRevenue: { label: "식음료 매출액", type: "money", color: "#334155" },
+        drinkRevenue: { label: "음료 매출액", type: "money", color: "#2563eb" },
+        drinkCost: { label: "음료 재료비", type: "money", color: "#60a5fa" },
+        drinkCostRate: { label: "음료 코스트율", type: "rate", color: "#2563eb" },
+        wineRevenue: { label: "와인 매출액", type: "money", color: "#8b5cf6" },
+        wineCost: { label: "와인 재료비", type: "money", color: "#c084fc" },
+        wineCostRate: { label: "와인 코스트율", type: "rate", color: "#7c3aed" },
+        bevRevenue: { label: "Bev 매출액", type: "money", color: "#008878" },
+        bevCost: { label: "Bev 재료비", type: "money", color: "#f59e0b" },
+        bevCostRate: { label: "Bev 코스트율", type: "rate", color: "#c2410c" },
+      };
+
+      const liquorMeta = [
+        { key: "wineRevenue", label: "와인", color: "#8b5cf6" },
+        { key: "highballRevenue", label: "하이볼", color: "#2563eb" },
+        { key: "klqRevenue", label: "전통주", color: "#14b8a6" },
+        { key: "beerRevenue", label: "맥주", color: "#f59e0b" },
+      ];
+
+      function asArray(value) {
+        return Array.isArray(value) ? value : [];
+      }
+
+      function byPeriod(a, b) {
+        return a.year - b.year || a.month - b.month;
+      }
+
+      function filterRecords(records, filters) {
+        const years = asArray(filters.years).map(String);
+        const quarters = asArray(filters.quarters);
+        const startMonth = Number(filters.startMonth || 1);
+        const endMonth = Number(filters.endMonth || 12);
+        return records
+          .filter((row) => years.length === 0 || years.includes(String(row.year)))
+          .filter((row) => row.month >= startMonth && row.month <= endMonth)
+          .filter((row) => quarters.length === 0 || quarters.includes(row.quarter))
+          .sort(byPeriod);
+      }
+
+      function sum(records, key) {
+        return records.reduce((total, row) => total + (Number(row[key]) || 0), 0);
+      }
+
+      function safeRate(cost, revenue) {
+        return revenue ? cost / revenue : 0;
+      }
+
+      function summarize(records) {
+        const drinkRevenue = sum(records, "drinkRevenue");
+        const drinkCost = sum(records, "drinkCost");
+        const wineRevenue = sum(records, "wineRevenue");
+        const wineCost = sum(records, "wineCost");
+        const bevRevenue = drinkRevenue + wineRevenue;
+        const bevCost = drinkCost + wineCost;
+        const fnbRevenue = sum(records, "fnbRevenue");
+        return {
+          count: records.length,
+          fnbRevenue,
+          drinkRevenue,
+          drinkCost,
+          drinkCostRate: safeRate(drinkCost, drinkRevenue),
+          wineRevenue,
+          wineCost,
+          wineCostRate: safeRate(wineCost, wineRevenue),
+          bevRevenue,
+          bevCost,
+          bevCostRate: safeRate(bevCost, bevRevenue),
+          bevShareOfFnb: safeRate(bevRevenue, fnbRevenue),
+          drinkShareOfBev: safeRate(drinkRevenue, bevRevenue),
+          wineShareOfBev: safeRate(wineRevenue, bevRevenue),
+        };
+      }
+
+      function compareYearOverYear(records, metricKey = "bevRevenue", baselineRecords = records) {
+        const years = Array.from(new Set(records.map((row) => row.year))).sort((a, b) => a - b);
+        const currentYear = years[years.length - 1];
+        const previousYear = currentYear - 1;
+        if (!currentYear) {
+          return {
+            currentYear,
+            previousYear,
+            currentValue: 0,
+            previousValue: 0,
+            delta: 0,
+            deltaRate: null,
+            comparableMonths: [],
+          };
+        }
+
+        const currentRows = records.filter((row) => row.year === currentYear);
+        const previousByMonth = new Map(
+          baselineRecords
+            .filter((row) => row.year === previousYear)
+            .map((row) => [row.month, row])
+        );
+        const comparableRows = currentRows.filter((row) => previousByMonth.has(row.month));
+        const comparableMonths = comparableRows.map((row) => row.month);
+        const currentValue = sum(comparableRows, metricKey);
+        const previousValue = comparableRows.reduce((total, row) => {
+          const previous = previousByMonth.get(row.month);
+          return total + (Number(previous?.[metricKey]) || 0);
+        }, 0);
+        const delta = currentValue - previousValue;
+        return {
+          currentYear,
+          previousYear,
+          currentValue,
+          previousValue,
+          delta,
+          deltaRate: previousValue ? delta / previousValue : null,
+          comparableMonths,
+        };
+      }
+
+      function compareRevenueYearOverYear(records, baselineRecords = records) {
+        return [
+          ["drinkRevenue", "음료 매출", "#2563eb"],
+          ["wineRevenue", "와인 매출", "#8b5cf6"],
+          ["bevRevenue", "Bev 매출", "#008878"],
+        ].map(([key, label, color]) => ({
+          key,
+          label,
+          color,
+          ...compareYearOverYear(records, key, baselineRecords),
+        }));
+      }
+
+      function yoyForRecord(row, records, metricKey = "bevRevenue") {
+        const previous = records.find((item) => item.year === row.year - 1 && item.month === row.month);
+        if (!previous || !previous[metricKey]) return null;
+        const currentValue = Number(row[metricKey]) || 0;
+        const previousValue = Number(previous[metricKey]) || 0;
+        const delta = currentValue - previousValue;
+        return {
+          previousValue,
+          delta,
+          deltaRate: previousValue ? delta / previousValue : null,
+        };
+      }
+
+      function groupByQuarter(records) {
+        const groups = new Map();
+        for (const row of records) {
+          const key = `${row.year} ${row.quarter}`;
+          if (!groups.has(key)) groups.set(key, []);
+          groups.get(key).push(row);
+        }
+        return Array.from(groups, ([label, rows]) => ({ label, ...summarize(rows) }));
+      }
+
+      function formatMoney(value) {
+        const number = Number(value) || 0;
+        return `${Math.round(number).toLocaleString("ko-KR")}원`;
+      }
+
+      function formatRate(value) {
+        return `${((Number(value) || 0) * 100).toFixed(1)}%`;
+      }
+
+      function formatSignedRate(value) {
+        if (value === null || value === undefined) return "-";
+        const sign = value > 0 ? "+" : "";
+        return `${sign}${formatRate(value)}`;
+      }
+
+      function formatSignedMoney(value) {
+        const number = Number(value) || 0;
+        const sign = number > 0 ? "+" : "";
+        return `${sign}${formatMoney(number)}`;
+      }
+
+      function formatMetric(value, key) {
+        return metricMeta[key]?.type === "rate" ? formatRate(value) : formatMoney(value);
+      }
+
+      function monthLabel(row) {
+        return `${String(row.year).slice(2)}년 ${row.month}월`;
+      }
+
+      function getData() {
+        const dataNode = document.getElementById("pnl-data");
+        return dataNode ? JSON.parse(dataNode.textContent) : [];
+      }
+
+      function getPromoLiquorData() {
+        const dataNode = document.getElementById("promo-liquor-data");
+        if (!dataNode) return [];
+        const parsed = JSON.parse(dataNode.textContent);
+        return Array.isArray(parsed) ? parsed : parsed.monthly || [];
+      }
+
+      function filterPromoLiquor(records, filters) {
+        const years = asArray(filters.years).map(String);
+        const quarters = asArray(filters.quarters);
+        const startMonth = Number(filters.startMonth || 1);
+        const endMonth = Number(filters.endMonth || 12);
+        return records
+          .filter((row) => years.length === 0 || years.includes(String(row.year)))
+          .filter((row) => row.month >= startMonth && row.month <= endMonth)
+          .filter((row) => quarters.length === 0 || quarters.includes(`Q${Math.floor((row.month - 1) / 3) + 1}`))
+          .sort(byPeriod);
+      }
+
+      function summarizePromoLiquor(records) {
+        const summary = records.reduce((total, row) => {
+          total.wineRevenue += Number(row.wineRevenue) || 0;
+          total.highballRevenue += Number(row.highballRevenue) || 0;
+          total.beerRevenue += Number(row.beerRevenue) || 0;
+          total.klqRevenue += Number(row.klqRevenue) || 0;
+          return total;
+        }, {
+          wineRevenue: 0,
+          highballRevenue: 0,
+          beerRevenue: 0,
+          klqRevenue: 0,
+        });
+        summary.totalRevenue = summary.wineRevenue + summary.highballRevenue + summary.beerRevenue + summary.klqRevenue;
+        summary.highballRevenueShare = summary.totalRevenue ? summary.highballRevenue / summary.totalRevenue : 0;
+        summary.topLiquor = liquorMeta
+          .map((item) => ({ ...item, value: summary[item.key] || 0 }))
+          .sort((a, b) => b.value - a.value)[0] || null;
+        return summary;
+      }
+
+      function summarizePromoLiquorRows(rows) {
+        return rows.reduce((total, row) => {
+          total.wineRevenue += Number(row.wineRevenue) || 0;
+          total.highballRevenue += Number(row.highballRevenue) || 0;
+          total.beerRevenue += Number(row.beerRevenue) || 0;
+          total.klqRevenue += Number(row.klqRevenue) || 0;
+          return total;
+        }, { wineRevenue: 0, highballRevenue: 0, beerRevenue: 0, klqRevenue: 0 });
+      }
+
+      function groupPromoLiquorByPeriod(records, mode) {
+        const groups = new Map();
+        for (const row of records) {
+          const half = row.month <= 6 ? "상반기" : "하반기";
+          const quarter = `Q${Math.floor((row.month - 1) / 3) + 1}`;
+          const label = mode === "year"
+            ? `${row.year}`
+            : mode === "half"
+              ? `${row.year} ${half}`
+              : `${row.year} ${quarter}`;
+          if (!groups.has(label)) groups.set(label, []);
+          groups.get(label).push(row);
+        }
+        return Array.from(groups, ([label, rows]) => ({
+          label,
+          ...summarizePromoLiquorRows(rows),
+        }));
+      }
+
+      function selectedValues(selector) {
+        return Array.from(document.querySelectorAll(selector))
+          .filter((node) => node.checked)
+          .map((node) => node.value);
+      }
+
+      function getFilters() {
+        return {
+          years: selectedValues(".btn-check[id^='year']"),
+          quarters: selectedValues(".quarter-filter"),
+          startMonth: Number(document.getElementById("startMonth").value),
+          endMonth: Number(document.getElementById("endMonth").value),
+        };
+      }
+
+      function setText(id, value) {
+        const node = document.getElementById(id);
+        if (node) node.textContent = value;
+      }
+
+      function initMonthSelects() {
+        const start = document.getElementById("startMonth");
+        const end = document.getElementById("endMonth");
+        if (!start || !end) return;
+        for (let month = 1; month <= 12; month += 1) {
+          start.add(new Option(`${month}월`, String(month), month === 1, month === 1));
+          end.add(new Option(`${month}월`, String(month), month === 12, month === 12));
+        }
+      }
+
+      function buildBaseChart(titleHidden = false) {
+        return {
+          animationDuration: 350,
+          tooltip: { trigger: "axis", valueFormatter: formatMoney, confine: true },
+          grid: { left: 62, right: 28, top: titleHidden ? 26 : 38, bottom: 42 },
+          legend: { top: 4, itemWidth: 12, itemHeight: 8, textStyle: { color: "#475569" } },
+          xAxis: { type: "category", axisLabel: { color: "#64748b" }, axisLine: { lineStyle: { color: "#cbd5e1" } } },
+          yAxis: { type: "value", axisLabel: { color: "#64748b" }, splitLine: { lineStyle: { color: "#e2e8f0" } } },
+        };
+      }
+
+      function renderTrend(chart, records, metricKey) {
+        const meta = metricMeta[metricKey];
+        const sourceRecords = window.DashboardSourceRecords || records;
+        const previousByMonth = new Map(
+          sourceRecords
+            .filter((row) => row.year === Math.max(...records.map((item) => item.year)) - 1)
+            .map((row) => [row.month, row])
+        );
+        const latestYear = records.length ? Math.max(...records.map((row) => row.year)) : null;
+        const previousSeries = records.map((row) => {
+          if (row.year !== latestYear) return null;
+          return previousByMonth.get(row.month)?.[metricKey] ?? null;
+        });
+        chart.setOption({
+          ...buildBaseChart(true),
+          tooltip: {
+            trigger: "axis",
+            valueFormatter: (value) => formatMetric(value, metricKey),
+          },
+          xAxis: { ...buildBaseChart().xAxis, data: records.map(monthLabel) },
+          yAxis: {
+            ...buildBaseChart().yAxis,
+            axisLabel: { formatter: (value) => formatMetric(value, metricKey), color: "#64748b" },
+          },
+          series: [
+            {
+              name: meta.label,
+              type: metricKey.includes("Rate") ? "line" : "bar",
+              smooth: true,
+              data: records.map((row) => row[metricKey]),
+              itemStyle: { color: meta.color },
+              lineStyle: { width: 3 },
+              areaStyle: metricKey.includes("Rate") ? { opacity: 0.08 } : undefined,
+            },
+            {
+              name: "전년 동월",
+              type: "line",
+              smooth: true,
+              data: previousSeries,
+              connectNulls: false,
+              symbol: "circle",
+              itemStyle: { color: "#94a3b8" },
+              lineStyle: { width: 2, type: "dashed" },
+            },
+          ],
+        }, true);
+      }
+
+      function renderMix(chart, totals) {
+        chart.setOption({
+          tooltip: { trigger: "item", valueFormatter: formatMoney },
+          legend: { bottom: 0, left: "center" },
+          series: [{
+            name: "Bev 구성",
+            type: "pie",
+            radius: ["48%", "72%"],
+            center: ["50%", "44%"],
+            avoidLabelOverlap: true,
+            label: { formatter: "{b}\n{d}%", position: "inside", color: "#fff", fontWeight: 700 },
+            data: [
+              { name: "음료", value: totals.drinkRevenue, itemStyle: { color: "#2563eb" } },
+              { name: "와인", value: totals.wineRevenue, itemStyle: { color: "#8b5cf6" } },
+            ],
+          }],
+        }, true);
+      }
+
+      function renderBars(chart, records) {
+        chart.setOption({
+          ...buildBaseChart(true),
+          tooltip: { trigger: "axis", valueFormatter: formatMoney },
+          xAxis: { ...buildBaseChart().xAxis, data: records.map(monthLabel) },
+          yAxis: { ...buildBaseChart().yAxis, axisLabel: { formatter: formatMoney, color: "#64748b" } },
+          series: [
+            { name: "Bev 매출", type: "bar", data: records.map((row) => row.bevRevenue), itemStyle: { color: "#008878" } },
+            { name: "Bev 재료비", type: "bar", data: records.map((row) => row.bevCost), itemStyle: { color: "#f59e0b" } },
+          ],
+        }, true);
+      }
+
+      function renderRates(chart, records) {
+        chart.setOption({
+          ...buildBaseChart(true),
+          tooltip: { trigger: "axis", valueFormatter: formatRate },
+          xAxis: { ...buildBaseChart().xAxis, data: records.map(monthLabel) },
+          yAxis: {
+            ...buildBaseChart().yAxis,
+            axisLabel: { formatter: (value) => `${Math.round(value * 100)}%`, color: "#64748b" },
+          },
+          series: [
+            { name: "음료", type: "line", smooth: true, data: records.map((row) => row.drinkCostRate), itemStyle: { color: "#2563eb" }, lineStyle: { width: 3 } },
+            { name: "와인", type: "line", smooth: true, data: records.map((row) => row.wineCostRate), itemStyle: { color: "#8b5cf6" }, lineStyle: { width: 3 } },
+            { name: "Bev", type: "line", smooth: true, data: records.map((row) => row.bevCostRate), itemStyle: { color: "#c2410c" }, lineStyle: { width: 3 } },
+          ],
+        }, true);
+      }
+
+      function renderYoYComparison(chart, comparisons) {
+        chart.setOption({
+          animationDuration: 350,
+          tooltip: {
+            trigger: "axis",
+            confine: true,
+            formatter: (items) => {
+              const item = comparisons[items[0].dataIndex];
+              return [
+                `<strong>${item.label}</strong>`,
+                `전년: ${formatMoney(item.previousValue)}`,
+                `현재: ${formatMoney(item.currentValue)}`,
+                `증감: ${formatSignedMoney(item.delta)}`,
+                `증감률: ${formatSignedRate(item.deltaRate)}`,
+              ].join("<br>");
+            },
+          },
+          grid: { left: 68, right: 48, top: 18, bottom: 34 },
+          xAxis: {
+            type: "value",
+            axisLabel: { formatter: "{value}%", color: "#64748b" },
+            splitLine: { lineStyle: { color: "#e2e8f0" } },
+          },
+          yAxis: {
+            type: "category",
+            data: comparisons.map((item) => item.label),
+            axisLabel: { color: "#334155", fontWeight: 700 },
+            axisLine: { lineStyle: { color: "#cbd5e1" } },
+          },
+          series: [{
+            name: "전년대비",
+            type: "bar",
+            data: comparisons.map((item) => ({
+              value: item.deltaRate === null ? 0 : Number((item.deltaRate * 100).toFixed(1)),
+              itemStyle: { color: item.delta >= 0 ? item.color : "#b91c1c" },
+            })),
+            label: {
+              show: true,
+              position: "right",
+              formatter: (params) => `${params.value > 0 ? "+" : ""}${params.value}%`,
+              color: "#334155",
+              fontWeight: 750,
+            },
+          }],
+        }, true);
+      }
+
+      function renderYoYCards(comparisons) {
+        const container = document.getElementById("yoyCards");
+        if (!container) return;
+        container.innerHTML = comparisons.map((item) => {
+          const direction = item.delta >= 0 ? "up" : "down";
+          const rateText = item.deltaRate === null ? "-" : formatSignedRate(item.deltaRate);
+          return `
+            <div class="yoy-item">
+              <div class="yoy-item-title">${item.label}</div>
+              <div class="yoy-item-rate metric-delta ${direction}">${rateText}</div>
+              <div class="yoy-item-detail">
+                현재 ${formatMoney(item.currentValue)}<br>
+                전년 ${formatMoney(item.previousValue)}<br>
+                증감 ${formatSignedMoney(item.delta)}
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      function renderPromoLiquorCharts(revenueChart, records) {
+        const labels = records.map(monthLabel);
+        revenueChart.setOption({
+          animationDuration: 350,
+          tooltip: { trigger: "axis", valueFormatter: formatMoney, confine: true },
+          legend: { top: 22, textStyle: { color: "#475569" } },
+          grid: { left: 82, right: 24, top: 58, bottom: 42 },
+          xAxis: { type: "category", data: labels, axisLabel: { color: "#64748b" }, axisLine: { lineStyle: { color: "#cbd5e1" } } },
+          yAxis: { type: "value", axisLabel: { formatter: formatMoney, color: "#64748b" }, splitLine: { lineStyle: { color: "#e2e8f0" } } },
+          series: liquorMeta.map((item) => ({
+            name: item.label,
+            type: "bar",
+            data: records.map((row) => row[item.key]),
+            itemStyle: { color: item.color },
+          })),
+        }, true);
+
+      }
+
+      function renderLiquorPeriodChart(chart, rows, title) {
+        chart.setOption({
+          animationDuration: 350,
+          tooltip: { trigger: "axis", valueFormatter: formatMoney, confine: true },
+          title: { text: title, left: 0, top: 0, textStyle: { fontSize: 13, color: "#334155", fontWeight: 750 } },
+          legend: { top: 0, textStyle: { color: "#475569" } },
+          grid: { left: 82, right: 18, top: 58, bottom: 42 },
+          xAxis: { type: "category", data: rows.map((row) => row.label), axisLabel: { color: "#64748b" }, axisLine: { lineStyle: { color: "#cbd5e1" } } },
+          yAxis: { type: "value", axisLabel: { formatter: formatMoney, color: "#64748b" }, splitLine: { lineStyle: { color: "#e2e8f0" } } },
+          series: liquorMeta.map((item) => ({
+            name: item.label,
+            type: "bar",
+            data: rows.map((row) => row[item.key]),
+            itemStyle: { color: item.color },
+          })),
+        }, true);
+      }
+
+      function periodText(records) {
+        if (!records.length) return "선택 데이터 없음";
+        const first = records[0];
+        const last = records[records.length - 1];
+        return `${first.ym} - ${last.ym}`;
+      }
+
+      function renderExecutiveInsights(records, summary, promoSummary) {
+        const revenueYoY = summary.revenueYoY.find((item) => item.key === "bevRevenue");
+        const yoyText = revenueYoY?.deltaRate === null || revenueYoY?.deltaRate === undefined
+          ? "전년 비교 데이터가 부족합니다."
+          : `BEV 매출은 전년 동월 대비 ${formatSignedRate(revenueYoY.deltaRate)} (${formatSignedMoney(revenueYoY.delta)})입니다.`;
+        const mixText = `BEV 매출 중 음료 ${formatRate(summary.totals.drinkShareOfBev)}, 와인 ${formatRate(summary.totals.wineShareOfBev)}입니다.`;
+        const topText = promoSummary.topLiquor
+          ? `${promoSummary.topLiquor.label}가 ${formatMoney(promoSummary.topLiquor.value)}으로 가장 큽니다.`
+          : "비교 가능한 주류 매출 데이터가 없습니다.";
+        const promoText = `와인, 하이볼, 전통주, 맥주를 합산 없이 비교합니다. ${topText}`;
+        setText("heroPeriod", periodText(records));
+        setText("executiveSummary", `${records.length}개월 기준으로 BEV 매출, 원가율, 전년대비, 프로모션 주류 성과를 한 화면에서 확인합니다.`);
+        setText("insightPerformance", yoyText);
+        setText("insightMix", mixText);
+        setText("insightPromo", promoText);
+      }
+
+      function renderPromoLiquorTable(records) {
+        const body = document.getElementById("promoRows");
+        if (!body) return;
+        if (records.length === 0) {
+          body.innerHTML = '<tr><td colspan="6"><div class="empty-state">선택한 조건에 프로모션 매출 데이터가 없습니다.</div></td></tr>';
+          return;
+        }
+        body.innerHTML = records.map((row) => `
+          <tr>
+            <td><span class="badge bg-secondary-lt">${row.ym}</span></td>
+            <td class="text-end fw-bold">${formatMoney(row.wineRevenue)}</td>
+            <td class="text-end">${formatMoney(row.highballRevenue)}</td>
+            <td class="text-end">${formatMoney(row.klqRevenue)}</td>
+            <td class="text-end">${formatMoney(row.beerRevenue)}</td>
+            <td class="text-end fw-bold">${formatMoney((row.wineRevenue || 0) + (row.highballRevenue || 0) + (row.beerRevenue || 0) + (row.klqRevenue || 0))}</td>
+          </tr>
+        `).join("");
+      }
+
+      function renderTable(records, allRecords) {
+        const body = document.getElementById("detailRows");
+        if (!body) return;
+        if (records.length === 0) {
+          body.innerHTML = '<tr><td colspan="12"><div class="empty-state">선택한 조건에 데이터가 없습니다.</div></td></tr>';
+          return;
+        }
+        body.innerHTML = records.map((row) => {
+          const yoy = yoyForRecord(row, allRecords, "bevRevenue");
+          const yoyClass = yoy && yoy.delta >= 0 ? "up" : "down";
+          const yoyText = yoy ? `${formatSignedRate(yoy.deltaRate)} (${formatMoney(yoy.delta)})` : "-";
+          return `
+            <tr>
+              <td><span class="badge bg-secondary-lt">${row.ym}</span></td>
+              <td class="text-end">${formatMoney(row.fnbRevenue)}</td>
+              <td class="text-end">${formatMoney(row.drinkRevenue)}</td>
+              <td class="text-end">${formatMoney(row.drinkCost)}</td>
+              <td class="text-end">${formatRate(row.drinkCostRate)}</td>
+              <td class="text-end">${formatMoney(row.wineRevenue)}</td>
+              <td class="text-end">${formatMoney(row.wineCost)}</td>
+              <td class="text-end">${formatRate(row.wineCostRate)}</td>
+              <td class="text-end fw-bold">${formatMoney(row.bevRevenue)}</td>
+              <td class="text-end"><span class="metric-delta ${yoy ? yoyClass : ""}">${yoyText}</span></td>
+              <td class="text-end">${formatMoney(row.bevCost)}</td>
+              <td class="text-end fw-bold">${formatRate(row.bevCostRate)}</td>
+            </tr>
+          `;
+        }).join("");
+      }
+
+      function updateSummary(records, filters) {
+        const totals = summarize(records);
+        const sourceRecords = window.DashboardSourceRecords || records;
+        const yoy = compareYearOverYear(records, "bevRevenue", sourceRecords);
+        const revenueYoY = compareRevenueYearOverYear(records, sourceRecords);
+        setText("kpiBevRevenue", formatMoney(totals.bevRevenue));
+        setText("kpiBevCost", formatMoney(totals.bevCost));
+        setText("kpiBevRate", formatRate(totals.bevCostRate));
+        setText("kpiYoY", yoy.deltaRate === null ? "-" : formatSignedRate(yoy.deltaRate));
+        setText("kpiYoYFoot", yoy.deltaRate === null
+          ? "비교 가능한 전년도 데이터 없음"
+          : `${yoy.previousYear}년 대비 ${formatMoney(yoy.delta)} · ${yoy.comparableMonths.length}개월`);
+        setText("kpiBevShare", `식음료 매출 대비 ${formatRate(totals.bevShareOfFnb)}`);
+        setText("kpiBevCostFoot", `음료 ${formatMoney(totals.drinkCost)} · 와인 ${formatMoney(totals.wineCost)}`);
+        setText("recordCount", `${records.length}개월`);
+        setText("tableSummary", `분기 ${filters.quarters.join(", ") || "없음"} · ${records.length}개 월`);
+        const first = records[0];
+        const last = records[records.length - 1];
+        setText("activePeriod", records.length ? `${first.ym} - ${last.ym}` : "선택 데이터 없음");
+        setText("yoyBasis", yoy.deltaRate === null ? "비교 불가" : `${yoy.previousYear}년 대비 ${yoy.currentYear}년`);
+        setText("yoySubtitle", yoy.deltaRate === null
+          ? "전년도 같은 월 데이터가 있어야 비교할 수 있습니다."
+          : `${yoy.comparableMonths.join(", ")}월 동월 기준 · 현재 선택 조건`);
+        return { totals, revenueYoY };
+      }
+
+      function applyPreset(name) {
+        const ranges = {
+          all: [1, 12, ["Q1", "Q2", "Q3", "Q4"]],
+          h1: [1, 6, ["Q1", "Q2"]],
+          h2: [7, 12, ["Q3", "Q4"]],
+          q1: [1, 3, ["Q1"]],
+          q2: [4, 6, ["Q2"]],
+          q3: [7, 9, ["Q3"]],
+          q4: [10, 12, ["Q4"]],
+        };
+        const [start, end, quarters] = ranges[name] || ranges.all;
+        document.getElementById("startMonth").value = String(start);
+        document.getElementById("endMonth").value = String(end);
+        document.querySelectorAll(".quarter-filter").forEach((node) => {
+          node.checked = quarters.includes(node.value);
+        });
+      }
+
+      function initDashboard() {
+        if (!document.getElementById("dashboard-root") || typeof echarts === "undefined") return;
+        initMonthSelects();
+        const data = getData();
+        const promoLiquorData = getPromoLiquorData();
+        window.DashboardSourceRecords = data;
+        const charts = {
+          trend: echarts.init(document.getElementById("trendChart")),
+          mix: echarts.init(document.getElementById("mixChart")),
+          bar: echarts.init(document.getElementById("barChart")),
+          rate: echarts.init(document.getElementById("rateChart")),
+          yoy: echarts.init(document.getElementById("yoyChart")),
+          promoRevenue: echarts.init(document.getElementById("promoRevenueChart")),
+          liquorQuarter: echarts.init(document.getElementById("liquorQuarterChart")),
+          liquorHalf: echarts.init(document.getElementById("liquorHalfChart")),
+          liquorYear: echarts.init(document.getElementById("liquorYearChart")),
+        };
+
+        function refresh() {
+          const filters = getFilters();
+          if (filters.startMonth > filters.endMonth) {
+            const temp = filters.startMonth;
+            filters.startMonth = filters.endMonth;
+            filters.endMonth = temp;
+            document.getElementById("startMonth").value = String(filters.startMonth);
+            document.getElementById("endMonth").value = String(filters.endMonth);
+          }
+          const records = filterRecords(data, filters);
+          const promoRecords = filterPromoLiquor(promoLiquorData, filters);
+          const promoSummary = summarizePromoLiquor(promoRecords);
+          const summary = updateSummary(records, filters);
+          const metricKey = document.getElementById("metricSelect").value;
+          setText("trendSubtitle", `${metricMeta[metricKey].label} · 선택 조건 기준`);
+          renderExecutiveInsights(records, summary, promoSummary);
+          setText("promoPeriod", `${promoRecords.length}개월`);
+          setText("promoWineTotal", formatMoney(promoSummary.wineRevenue));
+          setText("highballRevenueTotal", formatMoney(promoSummary.highballRevenue));
+          setText("highballFoot", "2025년 9~11월 프로모션 포함");
+          setText("beerRevenueTotal", formatMoney(promoSummary.beerRevenue));
+          setText("klqRevenueTotal", formatMoney(promoSummary.klqRevenue));
+          setText("topLiquorText", promoSummary.topLiquor ? `최고 ${promoSummary.topLiquor.label}` : "-");
+          renderTrend(charts.trend, records, metricKey);
+          renderMix(charts.mix, summary.totals);
+          renderBars(charts.bar, records);
+          renderRates(charts.rate, records);
+          renderYoYCards(summary.revenueYoY);
+          renderYoYComparison(charts.yoy, summary.revenueYoY);
+          renderPromoLiquorCharts(charts.promoRevenue, promoRecords);
+          renderLiquorPeriodChart(charts.liquorQuarter, groupPromoLiquorByPeriod(promoRecords, "quarter"), "분기별 비교");
+          renderLiquorPeriodChart(charts.liquorHalf, groupPromoLiquorByPeriod(promoRecords, "half"), "상반기 / 하반기 비교");
+          renderLiquorPeriodChart(charts.liquorYear, groupPromoLiquorByPeriod(promoRecords, "year"), "연간 비교");
+          renderPromoLiquorTable(promoRecords);
+          renderTable(records, data);
+          groupByQuarter(records);
+        }
+
+        document.querySelectorAll("input, select").forEach((node) => node.addEventListener("change", refresh));
+        document.querySelectorAll("[data-preset]").forEach((node) => {
+          node.addEventListener("click", () => {
+            applyPreset(node.dataset.preset);
+            refresh();
+          });
+        });
+        window.addEventListener("resize", () => Object.values(charts).forEach((chart) => chart.resize()));
+        refresh();
+      }
+
+      window.DashboardCore = {
+        filterRecords,
+        summarize,
+        compareYearOverYear,
+        compareRevenueYearOverYear,
+        summarizePromoLiquor,
+        groupPromoLiquorByPeriod,
+        groupByQuarter,
+        formatMoney,
+        formatRate,
+        metricMeta,
+      };
+
+      if (typeof document !== "undefined" && document.addEventListener) {
+        document.addEventListener("DOMContentLoaded", initDashboard);
+      }
+    })();
+  </script>
+</body>
+</html>
